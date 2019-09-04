@@ -3,6 +3,7 @@ const router = express.Router();
 const validateUserId = require('../validation/validateUserId');
 const validateUser = require('../validation/validateUser');
 const db = require('../users/userDb');
+const dbPosts = require('../posts/postDb');
 
 router.route('/')
   .post(validateUser, (req, res) => {
@@ -55,6 +56,39 @@ router.route('/:id')
         res.status(500).json({ message: 'Could not delete user' });
       });
   });
+
+router.get('/:id/posts', (req, res) => {
+  let id = req.params.id;
+  db.getUserPosts(id)
+    .then(r => {
+      console.log(r);
+      if(r) res.status(200).json(r);
+      else res.status(404).json({ error: 'No posts were found for user' });
+    })
+    .catch(e => {
+      console.log(e);
+      res.status(500).json({ errorMessage: 'Could not search for posts' });
+    });
+});
+
+router.post('/:id/posts', (req, res) => {
+  let id = req.params.id;
+  let post = req.body;
+  if(!post) res.status(400).json({ error: 'You must send a post to add' });
+  else if(!post.text) res.status(400).json({ error: 'You must add a text property to the request' });
+  else {
+    post.user_id = id;
+    dbPosts.insert(post)
+      .then(r => {
+        console.log(r);
+        res.status(201).json({ message: 'Post was created successfully', id: r.id });
+      })
+      .catch(e => {
+        console.error(e.response);
+        res.status(500).json({ message: 'Failed to fulfill request' });
+      });
+  }
+});
 
 
 module.exports = router;
