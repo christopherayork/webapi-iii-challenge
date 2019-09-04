@@ -4,10 +4,8 @@ const validateUserId = require('../validation/validateUserId');
 const validateUser = require('../validation/validateUser');
 const db = require('../users/userDb');
 
-router.use('/', validateUser);
-
 router.route('/')
-  .post((req, res) => {
+  .post(validateUser, (req, res) => {
     // our validateUser middleware checks it for us already
     db.insert(req.body)
       .then(r => {
@@ -25,10 +23,10 @@ router.use('/:id', validateUserId);
 router.route('/:id')
   .get((req, res) => {
     // our middleware should have set our found user to req.user
-    if(req.user) res.status(200).json({ user: req.user });
+    if(req.user) res.status(200).json(req.user);
     else res.status(500).json({ errorMessage: 'There was an error retrieving the user' });
   })
-  .put(validateUserId, (req, res) => {
+  .put((req, res) => {
     // same here
     console.log(req.user);
     let user = req.body;
